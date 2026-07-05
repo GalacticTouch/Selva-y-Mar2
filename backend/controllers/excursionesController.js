@@ -2,39 +2,46 @@ const connection = require("../database/connection");
 
 const obtenerExcursiones = (req, res) => {
     const sql = "SELECT * FROM excursiones WHERE estado = 1";
-    connection.query(
-        sql,
-        (error, resultados) => {
-            if (error) {
-                return res.status(500).json(error);
-            }
-            res.json(resultados);
+
+    connection.query(sql, (error, resultados) => {
+
+        if (error) {
+            return res.status(500).json(error);
         }
-    );
+
+        res.json(resultados);
+
+    });
 };
 
 const obtenerExcursionPorId = (req, res) => {
+
     const { id } = req.params;
+
     const sql = "SELECT * FROM excursiones WHERE id = ?";
-    connection.query(
-        sql,
-        [id],
-        (error, resultados) => {
-            if (error) {
-                return res.status(500).json(error);
-            }
-            if (resultados.length === 0) {
-                return res.status(404).json({
-                    mensaje: "Excursión no encontrada"
-                });
-            }
-            res.json(resultados[0]);
+
+    connection.query(sql, [id], (error, resultados) => {
+
+        if (error) {
+            return res.status(500).json(error);
         }
-    );
+
+        if (resultados.length === 0) {
+
+            return res.status(404).json({
+                mensaje: "Excursión no encontrada"
+            });
+
+        }
+
+        res.json(resultados[0]);
+
+    });
+
 };
 
 const crearExcursion = (req, res) => {
-    // 1. Desestructurar el body
+
     const {
         nombre,
         descripcion_corta,
@@ -45,37 +52,36 @@ const crearExcursion = (req, res) => {
         incluye
     } = req.body;
 
-    // 2. Capturar el nombre del archivo de la imagen si existe
     const imagen =
-req.files?.imagen
-? req.files.imagen[0].filename
-: null;
+        req.files?.imagen
+            ? req.files.imagen[0].path
+            : null;
 
-const fotos =
-req.files?.fotos
-? req.files.fotos
-: [];
+    const fotos =
+        req.files?.fotos
+            ? req.files.fotos
+            : [];
 
-    // 3. Consulta SQL corregida (Se eliminó el "VALUES" duplicado e incluyó "imagen")
     const sql = `
-    INSERT INTO excursiones
-    (
-        nombre,
-        descripcion_corta,
-        descripcion_larga,
-        precio,
-        ubicacion,
-        duracion,
-        incluye,
-        imagen
-    )
-    VALUES
-    (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO excursiones
+        (
+            nombre,
+            descripcion_corta,
+            descripcion_larga,
+            precio,
+            ubicacion,
+            duracion,
+            incluye,
+            imagen
+        )
+        VALUES
+        (?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    // 4. Array de parámetros incluyendo 'imagen' al final
     connection.query(
+
         sql,
+
         [
             nombre,
             descripcion_corta,
@@ -84,62 +90,66 @@ req.files?.fotos
             ubicacion,
             duracion,
             incluye,
-            imagen // ◄ Agregado como último parámetro
+            imagen
         ],
+
         (error, resultado) => {
+
             if (error) {
+
                 return res.status(500).json(error);
+
             }
-            const excursionId =
-resultado.insertId;
 
-if (fotos.length > 0) {
+            const excursionId = resultado.insertId;
 
-    const sqlFotos = `
-    INSERT INTO excursiones_fotos
-    (
-        excursion_id,
-        imagen
-    )
-    VALUES
-    (?, ?)
-    `;
+            if (fotos.length > 0) {
 
-    fotos.forEach((foto) => {
+                const sqlFotos = `
+                    INSERT INTO excursiones_fotos
+                    (
+                        excursion_id,
+                        imagen
+                    )
+                    VALUES
+                    (?, ?)
+                `;
 
-        connection.query(
+                fotos.forEach((foto) => {
 
-            sqlFotos,
+                    connection.query(
 
-            [
-                excursionId,
-                foto.filename
-            ]
+                        sqlFotos,
 
-        );
+                        [
+                            excursionId,
+                            foto.path
+                        ]
 
-    });
+                    );
 
-}
+                });
 
-res.json({
+            }
 
-    mensaje:
-    "Excursión creada",
+            res.json({
 
-    id:
-    excursionId
+                mensaje: "Excursión creada",
 
-});
+                id: excursionId
+
+            });
+
         }
+
     );
+
 };
 
 const eliminarExcursion = (req, res) => {
 
     const { id } = req.params;
 
-    // 1. Eliminar las reservas relacionadas
     const sqlReservas =
         "DELETE FROM reservas WHERE excursion_id = ?";
 
@@ -157,7 +167,6 @@ const eliminarExcursion = (req, res) => {
 
             }
 
-            // 2. Eliminar las fotos adicionales
             const sqlFotos =
                 "DELETE FROM excursiones_fotos WHERE excursion_id = ?";
 
@@ -175,7 +184,6 @@ const eliminarExcursion = (req, res) => {
 
                     }
 
-                    // 3. Eliminar la excursión
                     const sqlExcursion =
                         "DELETE FROM excursiones WHERE id = ?";
 
@@ -195,7 +203,8 @@ const eliminarExcursion = (req, res) => {
 
                             res.json({
 
-                                mensaje: "Excursión eliminada correctamente"
+                                mensaje:
+                                    "Excursión eliminada correctamente"
 
                             });
 
@@ -214,8 +223,11 @@ const eliminarExcursion = (req, res) => {
 };
 
 const actualizarExcursion = (req, res) => {
+
     const { id } = req.params;
+
     const {
+
         nombre,
         descripcion_corta,
         descripcion_larga,
@@ -223,49 +235,145 @@ const actualizarExcursion = (req, res) => {
         ubicacion,
         duracion,
         incluye
+
     } = req.body;
 
-    // Capturamos si viene una nueva imagen
-    const imagen = req.file ? req.file.filename : null;
+    const imagen =
+        req.files?.imagen
+            ? req.files.imagen[0].path
+            : null;
+
+    const fotos =
+        req.files?.fotos
+            ? req.files.fotos
+            : [];
 
     let sql;
+
     let params;
 
-    // Controlamos si el usuario subió una foto nueva o mantiene la anterior
     if (imagen) {
+
         sql = `
-        UPDATE excursiones
-        SET nombre = ?, descripcion_corta = ?, descripcion_larga = ?, precio = ?, ubicacion = ?, duracion = ?, incluye = ?, imagen = ?
-        WHERE id = ?
+            UPDATE excursiones
+            SET
+                nombre = ?,
+                descripcion_corta = ?,
+                descripcion_larga = ?,
+                precio = ?,
+                ubicacion = ?,
+                duracion = ?,
+                incluye = ?,
+                imagen = ?
+            WHERE id = ?
         `;
-        params = [nombre, descripcion_corta, descripcion_larga, precio, ubicacion, duracion, incluye, imagen, id];
+
+        params = [
+
+            nombre,
+            descripcion_corta,
+            descripcion_larga,
+            precio,
+            ubicacion,
+            duracion,
+            incluye,
+            imagen,
+            id
+
+        ];
+
     } else {
+
         sql = `
-        UPDATE excursiones
-        SET nombre = ?, descripcion_corta = ?, descripcion_larga = ?, precio = ?, ubicacion = ?, duracion = ?, incluye = ?
-        WHERE id = ?
+            UPDATE excursiones
+            SET
+                nombre = ?,
+                descripcion_corta = ?,
+                descripcion_larga = ?,
+                precio = ?,
+                ubicacion = ?,
+                duracion = ?,
+                incluye = ?
+            WHERE id = ?
         `;
-        params = [nombre, descripcion_corta, descripcion_larga, precio, ubicacion, duracion, incluye, id];
+
+        params = [
+
+            nombre,
+            descripcion_corta,
+            descripcion_larga,
+            precio,
+            ubicacion,
+            duracion,
+            incluye,
+            id
+
+        ];
+
     }
 
     connection.query(
+
         sql,
+
         params,
+
         (error) => {
+
             if (error) {
+
                 return res.status(500).json(error);
+
             }
+
+            if (fotos.length > 0) {
+
+                const sqlFotos = `
+                    INSERT INTO excursiones_fotos
+                    (
+                        excursion_id,
+                        imagen
+                    )
+                    VALUES
+                    (?, ?)
+                `;
+
+                fotos.forEach((foto) => {
+
+                    connection.query(
+
+                        sqlFotos,
+
+                        [
+                            id,
+                            foto.path
+                        ]
+
+                    );
+
+                });
+
+            }
+
             res.json({
-                mensaje: "Excursión actualizada"
+
+                mensaje:
+                    "Excursión actualizada"
+
             });
+
         }
+
     );
+
 };
 
 module.exports = {
+
     obtenerExcursiones,
     obtenerExcursionPorId,
     crearExcursion,
     eliminarExcursion,
     actualizarExcursion
+
 };

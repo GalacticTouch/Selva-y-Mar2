@@ -61,11 +61,15 @@ function DetalleExcursion() {
                 {excursion.imagen && (
                     <div className="position-relative mb-5 shadow rounded-4 overflow-hidden" style={{ height: "450px" }}>
                         <img
-                            src={`http://localhost:5000/uploads/${excursion.imagen}`}
-                            alt={excursion.nombre}
-                            className="w-100 h-100"
-                            style={{ objectFit: "cover" }}
-                        />
+    src={
+        excursion.imagen.startsWith("http")
+            ? excursion.imagen
+            : `http://localhost:5000/uploads/${excursion.imagen}`
+    }
+    alt={excursion.nombre}
+    className="w-100 h-100"
+    style={{ objectFit: "cover" }}
+/>
                         {/* Capa de degradado oscuro sobre la imagen para legibilidad */}
                         <div className="position-absolute bottom-0 start-0 w-100 p-4 p-md-5 text-white" 
                              style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.8))" }}>
@@ -132,11 +136,15 @@ function DetalleExcursion() {
                                         <div className="col-sm-6 col-md-4" key={foto.id}>
                                             <div className="overflow-hidden rounded-3 shadow-sm border" style={{ height: "180px" }}>
                                                 <img
-                                                    src={`http://localhost:5000/uploads/${foto.imagen}`}
-                                                    alt="Excursión anterior"
-                                                    className="w-100 h-100 img-fluid transition-all"
-                                                    style={{ objectFit: "cover" }}
-                                                />
+    src={
+        foto.imagen.startsWith("http")
+            ? foto.imagen
+            : `http://localhost:5000/uploads/${foto.imagen}`
+    }
+    alt="Excursión anterior"
+    className="w-100 h-100 img-fluid transition-all"
+    style={{ objectFit: "cover" }}
+/>
                                             </div>
                                         </div>
                                     ))}

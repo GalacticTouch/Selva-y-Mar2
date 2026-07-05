@@ -8,7 +8,7 @@ const subirFoto = (req, res) => {
 
     const imagen =
     req.file
-    ? req.file.filename
+    ? req.file.path
     : null;
 
     if (!imagen) {

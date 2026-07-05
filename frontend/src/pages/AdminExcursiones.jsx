@@ -19,6 +19,7 @@ function AdminExcursiones() {
     const [idEditar, setIdEditar] = useState(null);
     const [imagen, setImagen] = useState(null);
     const [fotos, setFotos] = useState([]);
+    const [imagenActual, setImagenActual] = useState(""); // ◄ Nuevo Estado Agregado
     
     // 2. Manejadores de eventos
     const cambiarValor = (e) => {
@@ -66,13 +67,14 @@ function AdminExcursiones() {
         setIdEditar(null);
         setImagen(null);
         setFotos([]);
+        setImagenActual(""); // ◄ Limpiar también el estado de la imagen actual
         
         // Resetear visualmente los inputs de tipo file
         const fileInputs = document.querySelectorAll('input[type="file"]');
         fileInputs.forEach(input => input.value = "");
     };
 
-    // 4. Guardar / Actualizar (CORREGIDO)
+    // 4. Guardar / Actualizar
     const guardarExcursion = async (e) => {
         e.preventDefault();
         try {
@@ -95,7 +97,6 @@ function AdminExcursiones() {
             });
 
             if (modoEdicion) {
-                // Si tu backend falla con PUT, cambia aquí a api.post(`/excursiones/${idEditar}`, datos)
                 await api.put(`/excursiones/${idEditar}`, datos);
                 alert("¡Excursión actualizada con éxito! ✨");
             } else {
@@ -103,15 +104,15 @@ function AdminExcursiones() {
                 alert("¡Excursión creada con éxito! 🎉");
             }
 
-            await cargarExcursiones(); // Esperar a que recargue la lista
-            cancelarEdicion();         // Limpiar todo el estado
+            await cargarExcursiones(); 
+            cancelarEdicion();         
         } catch (error) {
             console.error("Error al guardar:", error);
             alert("Hubo un problema al procesar la solicitud en el servidor.");
         }
     };
 
-    // 5. Eliminar (CORREGIDO)
+    // 5. Eliminar
     const eliminarExcursion = async (id) => {
         if (!window.confirm("¿Seguro que deseas eliminar esta excursión? Esta acción borrará permanentemente sus fotos.")) {
             return;
@@ -119,7 +120,6 @@ function AdminExcursiones() {
         try {
             await api.delete(`/excursiones/${id}`);
             
-            // Si estabas editando justo la que eliminaste, cancelamos la edición
             if (modoEdicion && idEditar === id) {
                 cancelarEdicion();
             }
@@ -146,7 +146,8 @@ function AdminExcursiones() {
 
         setModoEdicion(true);
         setIdEditar(excursion.id);
-        setImagen(null); // No sobreescribir la imagen actual a menos que elija una nueva
+        setImagenActual(excursion.imagen || ""); // ◄ Seteamos la url/path actual de la BD
+        setImagen(null); 
         setFotos([]);
 
         window.scrollTo({
@@ -221,11 +222,31 @@ function AdminExcursiones() {
                                     <div className="mb-3">
                                         <label className="form-label small fw-semibold text-secondary">{modoEdicion ? "Cambiar Imagen de portada (Opcional)" : "Imagen de portada principal"}</label>
                                         <input type="file" className="form-control" accept="image/*" onChange={cambiarImagen} />
-                                        {imagen && (
-                                            <div className="mt-2">
-                                                <img src={URL.createObjectURL(imagen)} alt="preview" style={{ height: "70px", objectFit: "cover" }} className="rounded border" />
-                                            </div>
-                                        )}
+                                        
+                                        {/* ◄ Renderizado condicional de vistas previas */}
+                                        <div className="mt-2">
+                                            {imagen ? (
+                                                <img
+                                                    src={URL.createObjectURL(imagen)}
+                                                    alt="preview"
+                                                    className="rounded border"
+                                                    style={{
+                                                        height: "70px",
+                                                        objectFit: "cover"
+                                                    }}
+                                                />
+                                            ) : imagenActual ? (
+                                                <img
+                                                    src={imagenActual}
+                                                    alt="actual"
+                                                    className="rounded border"
+                                                    style={{
+                                                        height: "70px",
+                                                        objectFit: "cover"
+                                                    }}
+                                                />
+                                            ) : null}
+                                        </div>
                                     </div>
 
                                     <div className="mb-4">

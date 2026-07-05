@@ -75,14 +75,14 @@ function Home() {
                                     <div className="position-relative">
                                         {excursion.imagen ? (
                                             <img
-                                                src={`http://localhost:5000/uploads/${excursion.imagen}`}
-                                                alt={excursion.nombre}
-                                                className="card-img-top"
-                                                style={{
-                                                    height: "240px",
-                                                    objectFit: "cover"
-                                                }}
-                                            />
+    src={excursion.imagen}
+    alt={excursion.nombre}
+    className="card-img-top"
+    style={{
+        height: "240px",
+        objectFit: "cover"
+    }}
+/>
                                         ) : (
                                             <div className="bg-secondary bg-opacity-20 d-flex align-items-center justify-content-center" style={{ height: "240px" }}>
                                                 <span className="text-muted">🏝️ Sin imagen disponible</span>
